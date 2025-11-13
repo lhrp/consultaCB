@@ -1,9 +1,11 @@
-from flask import Flask, jsonify
+import os
+
+from flask import Flask, send_from_directory
 from routes import rotasAPI
 from flask_restx import Api
 
 def createAPP():
-    app = Flask(__name__)
+    app = Flask(__name__, template_folder="templates", static_folder="static")
 
     app.config['JSON_AS_ASCII'] = False
     app.json.ensure_ascii = False
@@ -43,6 +45,14 @@ def createAPP():
         #app.register_blueprint(rota, url_prefix=f'/{rota.name}')
         docAPI.add_namespace(rota)
 
+    @app.route("/favicon.ico")
+    def favicon():
+        return send_from_directory(
+            os.path.join(app.root_path, "static", "img"),
+            "favicon.svg",
+            mimetype="image/svg+xml"
+        )
+    
     @app.route('/')
     def home():
         return "Hello, World!"
@@ -52,4 +62,4 @@ def createAPP():
 
 if __name__ == '__main__':
     app = createAPP()
-    app.run(debug=True)
+    app.run(debug=True, port=5775)

@@ -21,14 +21,13 @@ O Swagger está sendo gerado automáticamente com a lib flask-restx
   - `requests`
   - `python-dotenv`
   - `flask-restx`
-- [ ] Gerar requirements.txt
+- [✅] Gerar requirements.txt
 ---
 
-## 🧾 **Etapa 2 – Esboço das Rotas Públicas**
-- [ ] Criar rota `GET /codiboBarra/{gtin}/dados` → retorna JSON de dados (Propositalmente mantendo /dados, ao invés de apenas o /gtin)
-- [ ] Criar rota `GET /codiboBarra/{gtin}/imagem` → retorna imagem (via `StreamingResponse`)
-- [ ] Implementar *caching* leve (ex: `lru_cache` ou Redis)
-- [ ] Testar endpoints localmente
+## 🧾 **Etapa 2 – Exemplos das Rotas Públicas**
+- [✅] Criar rota `GET /codiboBarra/{gtin}/dados` → retorna JSON de dados (Propositalmente mantendo /dados, ao invés de apenas o /gtin)
+- [✅] Criar rota `GET /codiboBarra/{gtin}/imagem` → retorna imagem (via `StreamingResponse`)
+- [✅] Testar endpoints localmente
 
 ---
 
