@@ -1,0 +1,321 @@
+<!-- templates/home.html -->
+{% extends "base.html" %}
+
+{% block head %}
+<style>
+  .hero {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+  
+  .result-card {
+    margin-top: 2rem;
+  }
+  
+  .json-viewer {
+    background-color: #f5f5f5;
+    border: 1px solid #dbdbdb;
+    border-radius: 4px;
+    padding: 1rem;
+    overflow-x: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  
+  .product-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  
+  .loading {
+    display: none;
+  }
+  
+  .loading.is-active {
+    display: block;
+  }
+  
+  .modal-card-head {
+    background-color: #ffdd57;
+  }
+  
+  .modal-card-title {
+    color: #363636;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Modal de Aceite -->
+<div class="modal is-active" id="disclaimerModal">
+  <div class="modal-background"></div>
+  <div class="modal-card">
+    <header class="modal-card-head">
+      <p class="modal-card-title">
+        <span class="icon"><i class="fas fa-exclamation-triangle"></i></span>
+        Aviso Importante
+      </p>
+    </header>
+    <section class="modal-card-body">
+      <div class="content">
+        <h4>⚠️ Termos de Uso e Limitações</h4>
+        <p>Ao utilizar esta aplicação, você está ciente de que:</p>
+        <ul>
+          <li><strong>Indisponibilidade:</strong> O serviço pode ficar indisponível temporariamente devido a manutenções ou problemas técnicos.</li>
+          <li><strong>Lentidão:</strong> Em momentos de alta demanda, as respostas podem ser mais lentas que o esperado.</li>
+          <li><strong>Dados não encontrados:</strong> Nem todos os produtos estão cadastrados nas fontes de dados consultadas.</li>
+          <li><strong>Dados incorretos:</strong> As informações são obtidas de fontes na internet e podem conter imprecisões ou estar desatualizadas, bem como estarem indisponíveis no momento da consulta.</li>
+          <li><strong>Uso experimental:</strong> Esta API está em fase de testes e validação. A página web foi criada usando IA, utilizando HTML, CSS, JavaScript e o framework Bulma CSS.</li>
+        </ul>
+        <div class="notification is-info is-light">
+          <p><strong>📊 Projeto em Desenvolvimento</strong></p>
+          <p>Esta aplicação é mantida de forma independente para fins educacionais e de testes. O uso é totalmente gratuito.</p>
+        </div>
+      </div>
+    </section>
+    <footer class="modal-card-foot" style="justify-content: space-between;">
+      <button class="button is-success" id="acceptButton">
+        <span class="icon"><i class="fas fa-check"></i></span>
+        <span>Entendi e Aceito</span>
+      </button>
+      <a href="https://apoia.se/lhrp" target="_blank" class="button is-link">
+        <span class="icon"><i class="fas fa-hand-holding-heart"></i></span>
+        <span>Apoiar o Projeto</span>
+      </a>
+    </footer>
+  </div>
+</div>
+
+<!-- Hero Section -->
+<section class="hero is-medium">
+  <div class="hero-body">
+    <div class="container has-text-centered">
+      <h1 class="title is-1 has-text-white">
+        <span class="icon is-large">
+          <i class="fas fa-barcode fa-2x"></i>
+        </span>
+        <br>
+        Consulta de Código de Barras
+      </h1>
+      <h2 class="subtitle is-4 has-text-white">
+        Busque informações detalhadas de produtos pelo código de barras (GTIN/EAN)
+      </h2>
+    </div>
+  </div>
+</section>
+
+<!-- Search Section -->
+<section class="section">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="box">
+          <form method="POST" action="/consultar">
+            <div class="field has-addons">
+              <div class="control is-expanded has-icons-left">
+                <input 
+                  class="input is-large" 
+                  type="text" 
+                  name="barcode"
+                  id="barcodeInput" 
+                  placeholder="Digite o código de barras (ex: 7891000100103)"
+                  pattern="[0-9]{8,14}"
+                  value="{{ barcode or '' }}"
+                  required
+                >
+                <span class="icon is-left">
+                  <i class="fas fa-barcode"></i>
+                </span>
+              </div>
+              <div class="control">
+                <button class="button is-primary is-large" type="submit">
+                  <span class="icon">
+                    <i class="fas fa-search"></i>
+                  </span>
+                  <span>Consultar</span>
+                </button>
+              </div>
+            </div>
+            <p class="help">Digite um código de barras válido (8 a 14 dígitos)</p>
+          </form>
+        </div>
+
+        <!-- Error Message -->
+        {% if erro %}
+        <div id="errorMessage">
+          <article class="message is-danger">
+            <div class="message-header">
+              <p>Erro na Consulta</p>
+              <button class="delete" aria-label="delete" onclick="this.parentElement.parentElement.style.display='none'"></button>
+            </div>
+            <div class="message-body">{{ erro }}</div>
+          </article>
+        </div>
+        {% endif %}
+
+        <!-- Results -->
+        {% if resultado %}
+        <div id="results">
+          <!-- Product Info Card -->
+          <div class="card result-card">
+            <div class="card-content">
+              <div class="columns">
+                {% if imagem_url %}
+                <div class="column is-4">
+                  <figure class="image">
+                    <img src="{{ imagem_url }}" class="product-image" alt="Imagem do produto" onerror="this.parentElement.parentElement.style.display='none'">
+                  </figure>
+                </div>
+                <div class="column is-8">
+                {% else %}
+                <div class="column">
+                {% endif %}
+                  <div class="content">
+                    <h3 class="title is-4">Informações do Produto</h3>
+                    
+                    <div class="field">
+                      <label class="label">Código de Barras:</label>
+                      <div class="control">
+                        <input class="input" type="text" value="{{ resultado.codigoBarraProduto }}" readonly>
+                      </div>
+                    </div>
+
+                    <div class="field">
+                      <label class="label">Nome do Produto:</label>
+                      <div class="control">
+                        <input class="input" type="text" value="{{ resultado.nomeProduto }}" readonly>
+                      </div>
+                    </div>
+
+                    <div class="field">
+                      <label class="label">Marca:</label>
+                      <div class="control">
+                        <input class="input" type="text" value="{{ resultado.marcaProduto }}" readonly>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- JSON Data -->
+              <div class="content" style="margin-top: 2rem;">
+                <h4 class="title is-5">
+                  <span class="icon"><i class="fas fa-code"></i></span>
+                  Dados JSON Completos
+                </h4>
+                <div class="json-viewer">{{ resultado | tojson(indent=2) }}</div>
+              </div>
+
+              <div class="buttons is-centered" style="margin-top: 1rem;">
+                <button class="button is-info" onclick="copyJSON()">
+                  <span class="icon"><i class="fas fa-copy"></i></span>
+                  <span>Copiar JSON</span>
+                </button>
+                <a href="/" class="button">
+                  <span class="icon"><i class="fas fa-redo"></i></span>
+                  <span>Nova Consulta</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Info Section -->
+<section class="section has-background-light">
+  <div class="container">
+    <div class="columns">
+      <div class="column is-4">
+        <div class="box has-text-centered">
+          <span class="icon is-large has-text-primary">
+            <i class="fas fa-database fa-3x"></i>
+          </span>
+          <h3 class="title is-5">Base de Dados Própria</h3>
+          <p>A cada consulta bem-sucedida, os dados são armazenados em uma base própria para retornar mais rapidamente em novas consultas do mesmo produto</p>
+        </div>
+      </div>
+      <div class="column is-4">
+        <div class="box has-text-centered">
+          <span class="icon is-large has-text-warning">
+            <i class="fas fa-flask fa-3x"></i>
+          </span>
+          <h3 class="title is-5">Em Validação</h3>
+          <p>Estou testando a quantidade de requisições simultâneas que o servidor suporta. Pode haver lentidão em caso de muitos acessos</p>
+        </div>
+      </div>
+      <div class="column is-4">
+        <div class="box has-text-centered">
+          <span class="icon is-large has-text-success">
+            <i class="fas fa-heart fa-3x"></i>
+          </span>
+          <h3 class="title is-5">Projeto Gratuito</h3>
+          <p>Esta API não tem intenção de ser cobrada. Estou utilizando para testar códigos e alimentar a base de dados. Mas aceito doações para manter o servidor!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Function to copy JSON data
+  function copyJSON() {
+    const jsonViewer = document.querySelector('.json-viewer');
+    if (jsonViewer) {
+      const jsonText = jsonViewer.textContent;
+      navigator.clipboard.writeText(jsonText).then(() => {
+        // Show success notification
+        const btn = event.target.closest('button');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<span class="icon"><i class="fas fa-check"></i></span><span>Copiado!</span>';
+        btn.classList.add('is-success');
+        
+        setTimeout(() => {
+          btn.innerHTML = originalHTML;
+          btn.classList.remove('is-success');
+        }, 2000);
+      }).catch(err => {
+        alert('Erro ao copiar JSON: ' + err.message);
+      });
+    }
+  }
+
+  // Modal disclaimer control
+  document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('disclaimerModal');
+    const acceptButton = document.getElementById('acceptButton');
+    
+    // Check if user already accepted
+    const hasAccepted = localStorage.getItem('disclaimerAccepted');
+    
+    if (hasAccepted === 'true') {
+      modal.classList.remove('is-active');
+      document.getElementById('barcodeInput').focus();
+    } else {
+      // Focus on accept button if modal is shown
+      acceptButton.focus();
+    }
+    
+    // Handle accept button click
+    acceptButton.addEventListener('click', () => {
+      localStorage.setItem('disclaimerAccepted', 'true');
+      modal.classList.remove('is-active');
+      document.getElementById('barcodeInput').focus();
+    });
+
+    // Scroll to results if they exist
+    const results = document.getElementById('results');
+    if (results) {
+      results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+</script>
+{% endblock %}

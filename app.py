@@ -55,7 +55,55 @@ def createAPP():
     
     @app.route('/')
     def home():
-        return "Hello, World!"
+        from flask import render_template
+        return render_template('home.html', title='Consulta de Código de Barras')
+
+    @app.route('/consultar', methods=['GET', 'POST'])
+    def consultar():
+        from flask import render_template, request
+        from routes.consultaAPI import consultaDados
+        
+        resultado = None
+        erro = None
+        barcode = None
+        imagem_url = None
+        
+        if request.method == 'POST':
+            barcode = request.form.get('barcode', '').strip()
+            
+            if barcode and barcode.isdigit() and 8 <= len(barcode) <= 14:
+                try:
+                    # Consulta os dados do produto
+                    dadosCB = consultaDados(barcode, 1)
+                    
+                    if dadosCB.status_code == 200:
+                        data = dadosCB.json()
+                        
+                        # Verifica se a resposta tem a estrutura esperada
+                        if data.get('status') == 'success' and 'data' in data:
+                            resultado = data['data']
+                            # URL da imagem para ser carregada pelo template
+                            imagem_url = f"/api/codigoBarra/{barcode}/imagem"
+                        else:
+                            erro = data.get('message', 'Produto não encontrado')
+                    else:
+                        try:
+                            error_data = dadosCB.json()
+                            erro = error_data.get('message', f'Erro {dadosCB.status_code}: Não foi possível consultar o código de barras')
+                        except:
+                            erro = f'Erro {dadosCB.status_code}: Não foi possível consultar o código de barras'
+                            
+                except Exception as e:
+                    erro = f'Erro ao consultar: {str(e)}'
+            else:
+                erro = 'Por favor, digite um código de barras válido (8 a 14 dígitos)'
+        
+        return render_template('home.html', 
+                             title='Consulta de Código de Barras',
+                             resultado=resultado,
+                             erro=erro,
+                             barcode=barcode,
+                             imagem_url=imagem_url)
 
     return app
 

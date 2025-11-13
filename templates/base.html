@@ -2,14 +2,113 @@
 <!doctype html>
 <html lang="pt-BR">
   <head>
-
     <meta charset="utf-8">
-    <title>{{ title or "Minha API" }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title or "Consulta de Código de Barras" }}</title>
     <link rel="icon" type="image/svg+xml"
           href="{{ url_for('static', filename='img/favicon.svg') }}">
-  {% block head %}{% endblock %}
+    
+    <!-- Bulma CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    
+    <!-- Font Awesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    {% block head %}{% endblock %}
+    
+    <style>
+      html, body {
+        height: 100%;
+      }
+      .main-content {
+        min-height: calc(100vh - 52px);
+      }
+    </style>
   </head>
   <body>
-    {% block content %}{% endblock %}
+    <!-- Navbar -->
+    <nav class="navbar is-dark" role="navigation" aria-label="main navigation">
+      <div class="container">
+        <div class="navbar-brand">
+          <a class="navbar-item" href="/">
+            <strong>🔍 Consulta CB</strong>
+          </a>
+          
+          <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarMenu">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+          </a>
+        </div>
+
+        <div id="navbarMenu" class="navbar-menu">
+          <!-- <div class="navbar-start">
+            <a class="navbar-item" href="/">
+              <span class="icon"><i class="fas fa-home"></i></span>
+              <span>Início</span>
+            </a>
+          </div> -->
+
+          <div class="navbar-end">
+            <a class="navbar-item" href="/api/docs" target="_blank">
+              <span class="icon"><i class="fas fa-book"></i></span>
+              <span>Swagger API</span>
+            </a>
+            <a class="navbar-item" href="https://github.com/lhrp/consultaCB" target="_blank">
+              <span class="icon"><i class="fab fa-github"></i></span>
+              <span>GitHub</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="content has-text-centered">
+        <p>
+          <strong>Consulta de Código de Barras</strong> - Projeto Gratuito e de Código Aberto
+        </p>
+        <p>
+          <a href="/api/docs" target="_blank">
+            <span class="icon"><i class="fas fa-book"></i></span> Documentação API
+          </a> | 
+          <a href="https://github.com/lhrp/consultaCB" target="_blank">
+            <span class="icon"><i class="fab fa-github"></i></span> GitHub
+          </a> | 
+          <a href="https://apoia.se/lhrp" target="_blank" class="has-text-danger">
+            <span class="icon"><i class="fas fa-heart"></i></span> Apoiar o Projeto
+          </a>
+        </p>
+        <p class="is-size-7 has-text-grey">
+          Desenvolvido para fins educacionais e de testes
+        </p>
+      </div>
+    </footer>
+
+    <!-- Script para mobile menu -->
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+        
+        if ($navbarBurgers.length > 0) {
+          $navbarBurgers.forEach( el => {
+            el.addEventListener('click', () => {
+              const target = el.dataset.target;
+              const $target = document.getElementById(target);
+              el.classList.toggle('is-active');
+              $target.classList.toggle('is-active');
+            });
+          });
+        }
+      });
+    </script>
+    
+    {% block scripts %}{% endblock %}
   </body>
 </html>
