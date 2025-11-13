@@ -45,6 +45,56 @@
   .modal-card-title {
     color: #363636;
   }
+  
+  /* Loading Overlay */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .loading-overlay.is-active {
+    display: flex;
+  }
+  
+  .loading-content {
+    text-align: center;
+    color: white;
+  }
+  
+  .spinner {
+    border: 8px solid #f3f3f3;
+    border-top: 8px solid #3273dc;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  .loading-text {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-top: 10px;
+  }
+  
+  .loading-subtext {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    margin-top: 5px;
+  }
 </style>
 {% endblock %}
 
@@ -86,6 +136,23 @@
         <span>Apoiar o Projeto</span>
       </a>
     </footer>
+  </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-content">
+    <div class="spinner"></div>
+    <div class="loading-text">
+      <span class="icon is-large">
+        <i class="fas fa-search fa-2x"></i>
+      </span>
+      <br>
+      Consultando código de barras...
+    </div>
+    <div class="loading-subtext">
+      Aguarde enquanto buscamos as informações do produto
+    </div>
   </div>
 </div>
 
@@ -131,7 +198,7 @@
                 </span>
               </div>
               <div class="control">
-                <button class="button is-primary is-large" type="submit">
+                <button class="button is-primary is-large" type="submit" id="submitButton">
                   <span class="icon">
                     <i class="fas fa-search"></i>
                   </span>
@@ -287,6 +354,29 @@
       });
     }
   }
+
+  // Show loading on form submit
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.querySelector('form[action="/consultar"]');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const submitButton = document.getElementById('submitButton');
+    
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        // Valida se o campo está preenchido corretamente
+        const barcodeInput = document.getElementById('barcodeInput');
+        if (barcodeInput.value.trim() && barcodeInput.checkValidity()) {
+          // Mostra o loading overlay
+          loadingOverlay.classList.add('is-active');
+          
+          // Desabilita o botão e muda o texto
+          submitButton.disabled = true;
+          submitButton.classList.add('is-loading');
+          submitButton.innerHTML = '<span class="icon"><i class="fas fa-spinner fa-spin"></i></span><span>Consultando...</span>';
+        }
+      });
+    }
+  });
 
   // Modal disclaimer control
   document.addEventListener('DOMContentLoaded', () => {

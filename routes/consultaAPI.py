@@ -18,25 +18,31 @@ def consultaDados(codigoBarra: str, tipoConsulta:int):
     
     """
     url = f"{CONSULTADADOSCB if tipoConsulta == 1 else CONSULTAIMAGEMCB}{codigoBarra}"
-    codigoStatus = 0
-
+    
     ## Buscando os dados base do código de barras
     try:
-        dadosCB = requests.get(url)
+        dadosCB = requests.get(url, timeout=10)
         dadosCB.raise_for_status()
         return dadosCB
     except requests.exceptions.RequestException as e:
-        return dadosCB
-
+        # Criando uma resposta simulada para erros
+        from unittest.mock import Mock
         
+        error_response = Mock()
+        error_response.status_code = 503
+        error_response.content = b''
+        error_response.headers = {}
         
-    
-    # Consultando os dados
-    if tipoConsulta == 1:
-        return dadosCB
-    # Consultando a imagem
-    elif tipoConsulta == 2:
-        return {
-            "content": dadosCB.content,
-            "content_type": dadosCB.headers.get("content-type", "image/jpeg")
+        if isinstance(e, requests.exceptions.ConnectionError):
+            error_message = "Não foi possível conectar à API externa"
+        elif isinstance(e, requests.exceptions.Timeout):
+            error_message = "Tempo de resposta da API esgotado"
+        else:
+            error_message = f"Erro ao consultar API: {str(e)}"
+        
+        error_response.json = lambda: {
+            "status": "error",
+            "message": error_message
         }
+        
+        return error_response

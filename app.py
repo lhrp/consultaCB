@@ -7,6 +7,9 @@ from flask_restx import Api
 def createAPP():
     app = Flask(__name__, template_folder="templates", static_folder="static")
 
+    # Configuração de sessão
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
+    
     app.config['JSON_AS_ASCII'] = False
     app.json.ensure_ascii = False
 
@@ -42,7 +45,6 @@ def createAPP():
         Entre aspas, substituindo o trecho abaixo em cada rota:
         url_prefix="/codigoBarra"
         """
-        #app.register_blueprint(rota, url_prefix=f'/{rota.name}')
         docAPI.add_namespace(rota)
 
     @app.route("/favicon.ico")
@@ -58,45 +60,60 @@ def createAPP():
         from flask import render_template
         return render_template('home.html', title='Consulta de Código de Barras')
 
-    @app.route('/consultar', methods=['GET', 'POST'])
+    @app.route('/consultar', methods=['POST'])
     def consultar():
-        from flask import render_template, request
+        from flask import render_template, request, session, redirect, url_for
         from routes.consultaAPI import consultaDados
         
-        resultado = None
-        erro = None
-        barcode = None
-        imagem_url = None
+        barcode = request.form.get('barcode', '').strip()
         
-        if request.method == 'POST':
-            barcode = request.form.get('barcode', '').strip()
-            
-            if barcode and barcode.isdigit() and 8 <= len(barcode) <= 14:
-                try:
-                    # Consulta os dados do produto
-                    dadosCB = consultaDados(barcode, 1)
+        if barcode and barcode.isdigit() and 8 <= len(barcode) <= 14:
+            try:
+                # Consulta os dados do produto
+                dadosCB = consultaDados(barcode, 1)
+                
+                if dadosCB and dadosCB.status_code == 200:
+                    data = dadosCB.json()
                     
-                    if dadosCB.status_code == 200:
-                        data = dadosCB.json()
-                        
-                        # Verifica se a resposta tem a estrutura esperada
-                        if data.get('status') == 'success' and 'data' in data:
-                            resultado = data['data']
-                            # URL da imagem para ser carregada pelo template
-                            imagem_url = f"/api/codigoBarra/{barcode}/imagem"
-                        else:
-                            erro = data.get('message', 'Produto não encontrado')
+                    # Verifica se a resposta tem a estrutura esperada
+                    if data.get('status') == 'success' and 'data' in data:
+                        session['resultado'] = data['data']
+                        session['barcode'] = barcode
+                        session['imagem_url'] = f"/api/codigoBarra/{barcode}/imagem"
+                        session['erro'] = None
                     else:
-                        try:
-                            error_data = dadosCB.json()
-                            erro = error_data.get('message', f'Erro {dadosCB.status_code}: Não foi possível consultar o código de barras')
-                        except:
-                            erro = f'Erro {dadosCB.status_code}: Não foi possível consultar o código de barras'
-                            
-                except Exception as e:
-                    erro = f'Erro ao consultar: {str(e)}'
-            else:
-                erro = 'Por favor, digite um código de barras válido (8 a 14 dígitos)'
+                        session['erro'] = data.get('message', 'Produto não encontrado')
+                        session['resultado'] = None
+                elif dadosCB:
+                    try:
+                        error_data = dadosCB.json()
+                        session['erro'] = error_data.get('message', f'Erro {dadosCB.status_code}: Não foi possível consultar o código de barras')
+                    except Exception:
+                        session['erro'] = f'Erro {dadosCB.status_code}: Não foi possível consultar o código de barras'
+                    session['resultado'] = None
+                else:
+                    session['erro'] = 'Erro inesperado ao consultar o código de barras'
+                    session['resultado'] = None
+                        
+            except Exception as e:
+                session['erro'] = f'Erro ao processar consulta: {str(e)}'
+                session['resultado'] = None
+        else:
+            session['erro'] = 'Por favor, digite um código de barras válido (8 a 14 dígitos)'
+            session['resultado'] = None
+        
+        # Redireciona para a página de resultado (padrão Post/Redirect/Get)
+        return redirect(url_for('resultado'))
+    
+    @app.route('/resultado')
+    def resultado():
+        from flask import render_template, session
+        
+        # Pega os dados da sessão
+        resultado = session.pop('resultado', None)
+        erro = session.pop('erro', None)
+        barcode = session.pop('barcode', None)
+        imagem_url = session.pop('imagem_url', None)
         
         return render_template('home.html', 
                              title='Consulta de Código de Barras',
