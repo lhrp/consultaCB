@@ -7,6 +7,80 @@
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   }
   
+  /* Ajustes para mobile */
+  @media screen and (max-width: 768px) {
+    .hero.is-medium {
+      /* Reduz a altura do hero no mobile */
+      min-height: auto !important;
+    }
+    
+    .hero.is-medium .hero-body {
+      padding: 2rem 1.5rem !important;
+    }
+    
+    .hero .title.is-1 {
+      font-size: 2rem !important;
+    }
+    
+    .hero .subtitle.is-4 {
+      font-size: 1rem !important;
+      margin-top: 0.5rem !important;
+    }
+    
+    .hero .icon.is-large {
+      font-size: 2rem !important;
+    }
+    
+    /* Ajusta o espaçamento da seção de busca */
+    .section {
+      padding: 1.5rem 0.75rem !important;
+    }
+    
+    /* Ajusta o input e botão para mobile */
+    .field.has-addons {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .field.has-addons .control {
+      width: 100% !important;
+    }
+    
+    .field.has-addons .control:not(:last-child) {
+      margin-bottom: 0.5rem;
+    }
+    
+    .input.is-large,
+    .button.is-large {
+      font-size: 1rem !important;
+      height: 3rem !important;
+    }
+    
+    /* Ajusta as colunas de informação */
+    .columns {
+      margin: 0 !important;
+    }
+    
+    .column {
+      padding: 0.5rem !important;
+    }
+  }
+  
+  /* Para telas muito pequenas */
+  @media screen and (max-width: 375px) {
+    .hero.is-medium .hero-body {
+      padding: 1.5rem 1rem !important;
+    }
+    
+    .hero .title.is-1 {
+      font-size: 1.5rem !important;
+    }
+    
+    .hero .subtitle.is-4 {
+      font-size: 0.9rem !important;
+    }
+  }
+  
   .result-card {
     margin-top: 2rem;
   }
